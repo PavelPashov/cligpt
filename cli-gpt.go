@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 )
 
 const (
@@ -39,6 +42,17 @@ type Response struct {
 type ReqBody struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
+	Stream   bool      `json:"stream"`
+}
+
+type Chunk struct {
+	Choices []struct {
+		FinishReason string `json:"finish_reason"`
+		Delta        struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+		} `json:"delta"`
+	} `json:"choices"`
 }
 
 func createRequest(messages []Message, input string, config Config) *http.Request {
@@ -47,8 +61,9 @@ func createRequest(messages []Message, input string, config Config) *http.Reques
 	var reqBody ReqBody
 
 	reqBody.Model = config.Model
+	reqBody.Stream = true
 
-	reqBody.Messages = append(messages, Message{Role: "user", Content: input})
+	reqBody.Messages = messages
 
 	finalReqBody, err := json.Marshal(reqBody)
 	if err != nil {
@@ -80,12 +95,17 @@ func parseResponse(resp *http.Response) Response {
 	return responseBody
 }
 
-func askQuestion(messages []Message, input string, config Config) {
-	req := createRequest(messages, input, config)
+func createMessage(role string, content string) Message {
+	return Message{Role: role, Content: content}
+}
 
-	// This shows the loading spinner
-	shutdownCh := make(chan struct{})
-	go showSpinner(shutdownCh)
+func askQuestion(messages []Message, input string, config Config) []Message {
+	fmt.Print(clearScreen)
+
+	newMessage := createMessage("user", input)
+	messages = append(messages, newMessage)
+
+	req := createRequest(messages, input, config)
 
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -94,14 +114,38 @@ func askQuestion(messages []Message, input string, config Config) {
 	}
 	defer resp.Body.Close()
 
-	close(shutdownCh)
+	var content string
 
-	respBody := parseResponse(resp)
+	reader := bufio.NewReader(resp.Body)
+out:
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
 
-	message := respBody.Choices[0].Message
-	messages = append(messages, message)
+		pat := regexp.MustCompile(`(data: )(.*)`)
+		match := pat.FindStringSubmatch(string(line))
 
-	fmt.Print(clearScreen)
-	fmt.Println(fmt.Sprintf("\x1b[%dm%s\x1b[0m", 33, "Response:"))
-	fmt.Println(fmt.Sprintf("\x1b[%dm%s\x1b[0m", 32, message.Content))
+		var chunk Chunk
+
+		if len(match) > 1 {
+			if err := json.Unmarshal([]byte(strings.Trim(match[2], " ")), &chunk); err != nil {
+				log.Fatal("Error parsing response body:", err)
+			}
+			if chunk.Choices[0].Delta.Content != "" {
+				fmt.Print(fmt.Sprintf("\x1b[%dm%s\x1b[0m", 32, chunk.Choices[0].Delta.Content))
+				content += chunk.Choices[0].Delta.Content
+			}
+
+			if chunk.Choices[0].FinishReason == "stop" {
+				break out
+			}
+		}
+	}
+
+	messages = append(messages, Message{Role: "assistant", Content: content})
+	fmt.Println()
+	return messages
 }

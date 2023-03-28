@@ -14,9 +14,8 @@ import (
 )
 
 type Config struct {
-	Model      string `yaml:"model"`
-	Token      string `yaml:"token"`
-	Motivation string `yaml:"motivation"`
+	Model string `yaml:"model"`
+	Token string `yaml:"token"`
 }
 
 func getConfigPath() string {

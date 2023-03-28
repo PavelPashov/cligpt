@@ -27,10 +27,9 @@ func main() {
 
 	if session {
 		var messages []Message
-
 		for true {
 			input := getUserInput()
-			askQuestion(messages, input, config)
+			messages = askQuestion(messages, input, config)
 		}
 	} else {
 		askQuestion(nil, strings.Join(args[:], " "), config)
