@@ -19,9 +19,10 @@ type ResponseBody struct {
 }
 
 type RequestBody struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
+	Model       string    `json:"model"`
+	Messages    []Message `json:"messages"`
+	Stream      bool      `json:"stream"`
+	Temperature float64   `json:"temperature"`
 }
 
 func buildRequest(app *appEnv) *http.Request {
@@ -29,6 +30,10 @@ func buildRequest(app *appEnv) *http.Request {
 
 	reqBody.Model = app.model
 	reqBody.Stream = !app.isSinglePrompt
+
+	if app.temperature != 0 {
+		reqBody.Temperature = app.temperature
+	}
 
 	reqBody.Messages = app.messages
 

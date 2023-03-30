@@ -48,27 +48,31 @@ type appEnv struct {
 	outputJSON     bool
 	isSinglePrompt bool
 	initialPrompt  string
+	temperature    float64
+	personality    string
 }
 
 func (app *appEnv) getDefaultConfig(fl *flag.FlagSet) {
-	if app.token == "" || app.model == "" {
-		config := parseConfig()
-		if app.token == "" && config.Token == "" {
-			fl.Usage()
-			log.Fatal("Token not provided nor found in config!")
-		} else {
-			app.token = config.Token
-		}
-		if app.model == "" && config.Model == "" {
-			app.model = models["chatgpt"]
-		} else {
-			app.model = config.Model
-		}
+	config := parseConfig()
+
+	if app.token == "" && config.Token == "" {
+		fl.Usage()
+		log.Fatal("Token not provided nor found in config!")
+	} else if app.token == "" {
+		app.token = config.Token
 	}
+
+	if app.model == "" && config.Model == "" {
+		app.model = models["chatgpt"]
+	} else {
+		app.model = config.Model
+	}
+
+	app.personality = config.Personality
+	app.temperature = config.Temperature
 }
 
 func (app *appEnv) fromArgs(args []string) {
-	// This can later be used for system messages
 	app.messages = []Message{}
 
 	fl := flag.NewFlagSet("cli-gpt", flag.ContinueOnError)
@@ -190,12 +194,14 @@ func (app *appEnv) singlePrompt() {
 
 	if app.outputJSON {
 		printResponse(stringifyResponseBody(resp))
+		print()
 		return
 	}
 
 	responseBody := parseResponse(resp)
 
 	printResponse(responseBody.Choices[0].Message.Content)
+	print()
 }
 
 func (app *appEnv) sessionPrompt() {
@@ -217,6 +223,10 @@ func (app *appEnv) sessionPrompt() {
 }
 
 func (app *appEnv) run() {
+	if app.personality != "" {
+		app.messages = append(app.messages, createMessage("system", app.personality))
+	}
+
 	if app.isSinglePrompt {
 		app.messages = append(app.messages, createMessage("user", app.initialPrompt))
 		app.singlePrompt()
