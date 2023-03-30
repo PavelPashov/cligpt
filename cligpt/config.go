@@ -1,14 +1,12 @@
-package main
+package cligpt
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -105,25 +103,4 @@ func isFlagPassed(name string) bool {
 		}
 	})
 	return found
-}
-
-func showSpinner(shutdownCh <-chan struct{}) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	fmt.Print(fmt.Sprintf("\x1b[%dm%s\x1b[0m", 33, "Loading"))
-	for {
-		select {
-		case <-ticker.C:
-			fmt.Print(fmt.Sprintf("\x1b[%dm%s\x1b[0m", 33, "."))
-		case <-shutdownCh:
-			return
-		}
-	}
-}
-
-func getUserInput() string {
-	fmt.Print("> ")
-	input := bufio.NewScanner(os.Stdin)
-	input.Scan()
-	return input.Text()
 }
