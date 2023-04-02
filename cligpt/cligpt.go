@@ -224,7 +224,9 @@ func (app *appEnv) ListAndSelectSession() {
 	app.messages = app.currentSession.Messages
 	for _, e := range app.currentSession.Messages {
 		if e.Role == "user" {
-			fmt.Println(e.Content)
+			fmt.Println()
+			fmt.Println("USER: ", e.Content)
+			fmt.Println()
 		} else {
 			printResponse(e.Content)
 			fmt.Println()

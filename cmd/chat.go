@@ -16,6 +16,12 @@ var chatCmd = &cobra.Command{
 	Long:  `This command will start a chat with the model, you can specify the initial prompt to use with the --prompt flag`,
 	Run: func(cmd *cobra.Command, args []string) {
 		prompt, _ := cmd.Flags().GetString("prompt")
+		if prompt == "" && len(args) > 0 {
+			for _, arg := range args {
+				prompt += arg + " "
+			}
+		}
+
 		app := cligpt.InitApp()
 		app.InitialPrompt = prompt
 		app.Chat()
