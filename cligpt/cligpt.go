@@ -8,8 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"cligpt/db"
+	"cligpt/types"
 )
 
 const clearScreen string = "\033[H\033[2J"
@@ -26,11 +31,6 @@ func CLI(args []string) {
 	app.run()
 }
 
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 type Chunk struct {
 	Choices []struct {
 		FinishReason string `json:"finish_reason"`
@@ -42,7 +42,7 @@ type Chunk struct {
 }
 
 type appEnv struct {
-	messages       []Message
+	messages       []types.Message
 	model          string
 	token          string
 	outputJSON     bool
@@ -50,6 +50,9 @@ type appEnv struct {
 	initialPrompt  string
 	temperature    float64
 	personality    string
+	listSessions   bool
+	sessions       []types.Session
+	currentSession types.Session
 }
 
 func (app *appEnv) getDefaultConfig(fl *flag.FlagSet) {
@@ -72,8 +75,18 @@ func (app *appEnv) getDefaultConfig(fl *flag.FlagSet) {
 	app.temperature = config.Temperature
 }
 
+func isFlagPassed(fl *flag.FlagSet, name string) bool {
+	found := false
+	fl.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
+}
+
 func (app *appEnv) fromArgs(args []string) {
-	app.messages = []Message{}
+	app.messages = []types.Message{}
 
 	fl := flag.NewFlagSet("cli-gpt", flag.ContinueOnError)
 
@@ -82,7 +95,7 @@ func (app *appEnv) fromArgs(args []string) {
 	)
 
 	fl.StringVar(
-		&app.model, "t", "", "OpenAI Token (sk-...)",
+		&app.token, "t", "", "OpenAI Token (sk-...)",
 	)
 
 	fl.BoolVar(
@@ -93,38 +106,83 @@ func (app *appEnv) fromArgs(args []string) {
 		&app.isSinglePrompt, "s", false, "Use this flag if you want to input a single prompt",
 	)
 
+	fl.BoolVar(
+		&app.listSessions, "l", false, "Use this flag to list your latest 10 sessions",
+	)
+
 	fl.Parse(args)
 
 	for _, arg := range fl.Args() {
 		app.initialPrompt += arg + " "
 	}
 
-	if isFlagPassed("m") {
-		if models[strings.ToLower(app.model)] == "" {
+	if isFlagPassed(fl, "m") {
+		fmt.Println(args)
+
+		selectedModel := models[strings.ToLower(app.model)]
+
+		if selectedModel == "" {
 			fl.Usage()
 			log.Fatal("Invalid model provided: ", app.model)
 		}
+		saveToConfig("model", selectedModel)
 	}
 
-	if isFlagPassed("t") {
+	if isFlagPassed(fl, "t") {
 		if app.token == "" || !strings.HasPrefix(app.token, "sk-") {
 			fl.Usage()
 			log.Fatal("Please provide a valid token")
 		}
-		saveToken(app.token)
+		saveToConfig("token", app.token)
 	}
 
-	if app.isSinglePrompt && isFlagPassed("j") {
+	if !app.isSinglePrompt && app.outputJSON {
 		fl.Usage()
 		log.Fatal("Json output only available for single prompt")
 	}
 
-	if app.isSinglePrompt && app.initialPrompt == "" {
+	if app.listSessions && (app.isSinglePrompt || app.outputJSON) {
 		fl.Usage()
-		log.Fatal("Single prompt requires an input - cligpt -s \"<prompt>\"")
+		log.Fatal("Cannot list session in single prompt mode")
+	}
+
+	if app.listSessions {
+		app.sessions = db.GetLastTenSessions()
 	}
 
 	app.getDefaultConfig(fl)
+}
+
+func (app *appEnv) printSessions() {
+	index := 0
+	printResponse("Your latest 10 sessions:\n")
+	for _, session := range app.sessions {
+		fmt.Print("ID: ", index)
+		fmt.Println("  | ", session.Messages[0].Content)
+		index++
+	}
+	printResponse("Please select a session by ID\n")
+}
+
+func (app *appEnv) loadSession() {
+	for true {
+		app.printSessions()
+		selectedSession := getUserInput()
+		index, err := strconv.Atoi(selectedSession)
+
+		if err != nil || index > len(app.sessions) || index < 0 {
+			fmt.Println("Invalid session provided: ", selectedSession)
+		} else {
+			app.currentSession = app.sessions[index]
+
+			printResponse("ID: " + selectedSession + " | " + strings.Trim(app.currentSession.Messages[0].Content, " ") + " selected")
+			println()
+
+			app.messages = app.currentSession.Messages
+			break
+		}
+	}
+
 }
 
 func getUserInput() string {
@@ -134,8 +192,8 @@ func getUserInput() string {
 	return input.Text()
 }
 
-func createMessage(role string, content string) Message {
-	return Message{Role: role, Content: content}
+func createMessage(role string, content string) types.Message {
+	return types.Message{Role: role, Content: content}
 }
 
 func printResponse(responseString string) {
@@ -218,7 +276,17 @@ func (app *appEnv) sessionPrompt() {
 
 	content := parseMessageChunks(resp)
 
-	app.messages = append(app.messages, Message{Role: "assistant", Content: content})
+	app.messages = append(app.messages, types.Message{Role: "assistant", Content: content})
+
+	if reflect.ValueOf(app.currentSession).IsZero() {
+		app.currentSession = db.CreateSession(app.messages)
+	} else {
+		db.UpdateSession(app.currentSession.ID, app.messages)
+	}
+
+	if app.currentSession.ID != 0 {
+	} else {
+	}
 	fmt.Println()
 }
 
@@ -231,6 +299,10 @@ func (app *appEnv) run() {
 		app.messages = append(app.messages, createMessage("user", app.initialPrompt))
 		app.singlePrompt()
 	} else {
+		if app.listSessions {
+			app.loadSession()
+		}
+
 		for true {
 			var input string
 			if app.initialPrompt != "" {

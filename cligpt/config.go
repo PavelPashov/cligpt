@@ -1,7 +1,6 @@
 package cligpt
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,6 +8,11 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+)
+
+const (
+	folderName = ".cligpt"
+	configName = "config.yaml"
 )
 
 type Config struct {
@@ -24,14 +28,25 @@ func getConfigPath() string {
 		log.Fatal(err)
 	}
 
-	path := filepath.Join(homedir, ".cligpt")
-	return path
+	return filepath.Join(homedir, folderName, configName)
 }
 
 func createConfig() {
-	path := getConfigPath()
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	f, err := os.Create(path)
+	pathToFolder := filepath.Join(homedir, folderName)
+
+	if _, err := os.Stat(pathToFolder); os.IsNotExist(err) {
+		err := os.Mkdir(pathToFolder, 0775)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	f, err := os.Create(getConfigPath())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,12 +55,19 @@ func createConfig() {
 	fmt.Println("Config file created at: ", f.Name())
 }
 
-func saveToken(token string) {
+func saveToConfig(key string, value string ) {
 	path := getConfigPath()
 
 	config := parseConfig()
 
-	config.Token = token
+	switch key {
+	case "model":
+		config.Model = value
+	case "token":
+		config.Token = value
+	case "personality":
+		config.Personality = value
+	}
 
 	data, err := yaml.Marshal(&config)
 	if err != nil {
@@ -58,7 +80,7 @@ func saveToken(token string) {
 		log.Fatal(err2)
 	}
 
-	fmt.Println("Token saved to config file at: ", path)
+	fmt.Println(key + " saved to config file at: ", path)
 }
 
 func saveConfig(newConfig Config) {
@@ -95,14 +117,4 @@ func parseConfig() Config {
 	}
 
 	return config
-}
-
-func isFlagPassed(name string) bool {
-	found := false
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == name {
-			found = true
-		}
-	})
-	return found
 }

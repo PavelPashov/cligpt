@@ -2,6 +2,7 @@ package cligpt
 
 import (
 	"bytes"
+	"cligpt/types"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -14,13 +15,13 @@ const (
 
 type ResponseBody struct {
 	Choices []struct {
-		Message Message `json:"message"`
+		Message types.Message `json:"message"`
 	}
 }
 
 type RequestBody struct {
 	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
+	Messages    []types.Message `json:"messages"`
 	Stream      bool      `json:"stream"`
 	Temperature float64   `json:"temperature"`
 }
@@ -60,6 +61,7 @@ func parseResponse(resp *http.Response) ResponseBody {
 	}
 
 	var responseBody ResponseBody
+	
 	if err := json.Unmarshal(body, &responseBody); err != nil {
 		log.Fatal("Error parsing response body:", err)
 	}
