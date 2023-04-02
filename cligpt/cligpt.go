@@ -3,14 +3,12 @@ package cligpt
 import (
 	"bufio"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"cligpt/db"
@@ -19,17 +17,6 @@ import (
 
 const clearScreen string = "\033[H\033[2J"
 const responseColor string = "\x1b[%dm%s\x1b[0m"
-
-var models = map[string]string{
-	"chatgpt": "gpt-3.5-turbo",
-	"gpt4":    "gpt-4",
-}
-
-func CLI(args []string) {
-	var app appEnv
-	app.fromArgs(args)
-	app.run()
-}
 
 type Chunk struct {
 	Choices []struct {
@@ -45,9 +32,9 @@ type appEnv struct {
 	messages       []types.Message
 	model          string
 	token          string
-	outputJSON     bool
+	OutputJSON     bool
 	isSinglePrompt bool
-	initialPrompt  string
+	InitialPrompt  string
 	temperature    float64
 	personality    string
 	listSessions   bool
@@ -55,17 +42,12 @@ type appEnv struct {
 	currentSession types.Session
 }
 
-func (app *appEnv) getDefaultConfig(fl *flag.FlagSet) {
+func (app *appEnv) loadConfig() {
 	config := parseConfig()
 
-	if app.token == "" && config.Token == "" {
-		fl.Usage()
-		log.Fatal("Token not provided nor found in config!")
-	} else if app.token == "" {
-		app.token = config.Token
-	}
+	app.token = config.Token
 
-	if app.model == "" && config.Model == "" {
+	if config.Model == "" {
 		app.model = models["chatgpt"]
 	} else {
 		app.model = config.Model
@@ -73,116 +55,6 @@ func (app *appEnv) getDefaultConfig(fl *flag.FlagSet) {
 
 	app.personality = config.Personality
 	app.temperature = config.Temperature
-}
-
-func isFlagPassed(fl *flag.FlagSet, name string) bool {
-	found := false
-	fl.Visit(func(f *flag.Flag) {
-		if f.Name == name {
-			found = true
-		}
-	})
-	return found
-}
-
-func (app *appEnv) fromArgs(args []string) {
-	app.messages = []types.Message{}
-
-	fl := flag.NewFlagSet("cli-gpt", flag.ContinueOnError)
-
-	fl.StringVar(
-		&app.model, "m", "", "AI model: (chatgpt or gpt4)",
-	)
-
-	fl.StringVar(
-		&app.token, "t", "", "OpenAI Token (sk-...)",
-	)
-
-	fl.BoolVar(
-		&app.outputJSON, "j", false, "Use this flag if you want the response to be output in json",
-	)
-
-	fl.BoolVar(
-		&app.isSinglePrompt, "s", false, "Use this flag if you want to input a single prompt",
-	)
-
-	fl.BoolVar(
-		&app.listSessions, "l", false, "Use this flag to list your latest 10 sessions",
-	)
-
-	fl.Parse(args)
-
-	for _, arg := range fl.Args() {
-		app.initialPrompt += arg + " "
-	}
-
-	if isFlagPassed(fl, "m") {
-		fmt.Println(args)
-
-		selectedModel := models[strings.ToLower(app.model)]
-
-		if selectedModel == "" {
-			fl.Usage()
-			log.Fatal("Invalid model provided: ", app.model)
-		}
-		saveToConfig("model", selectedModel)
-	}
-
-	if isFlagPassed(fl, "t") {
-		if app.token == "" || !strings.HasPrefix(app.token, "sk-") {
-			fl.Usage()
-			log.Fatal("Please provide a valid token")
-		}
-		saveToConfig("token", app.token)
-	}
-
-	if !app.isSinglePrompt && app.outputJSON {
-		fl.Usage()
-		log.Fatal("Json output only available for single prompt")
-	}
-
-	if app.listSessions && (app.isSinglePrompt || app.outputJSON) {
-		fl.Usage()
-		log.Fatal("Cannot list session in single prompt mode")
-	}
-
-	if app.listSessions {
-		app.sessions = db.GetLastTenSessions()
-	}
-
-	app.getDefaultConfig(fl)
-}
-
-func (app *appEnv) printSessions() {
-	index := 0
-	printResponse("Your latest 10 sessions:\n")
-	for _, session := range app.sessions {
-		fmt.Print("ID: ", index)
-		fmt.Println("  | ", session.Messages[0].Content)
-		index++
-	}
-	printResponse("Please select a session by ID\n")
-}
-
-func (app *appEnv) loadSession() {
-	for true {
-		app.printSessions()
-		selectedSession := getUserInput()
-		index, err := strconv.Atoi(selectedSession)
-
-		if err != nil || index > len(app.sessions) || index < 0 {
-			fmt.Println("Invalid session provided: ", selectedSession)
-		} else {
-			app.currentSession = app.sessions[index]
-
-			printResponse("ID: " + selectedSession + " | " + strings.Trim(app.currentSession.Messages[0].Content, " ") + " selected")
-			println()
-
-			app.messages = app.currentSession.Messages
-			break
-		}
-	}
-
 }
 
 func getUserInput() string {
@@ -207,6 +79,10 @@ func regExpChunk(line []byte) []string {
 
 func parseMessageChunks(resp *http.Response) string {
 	var content string
+
+	if resp.StatusCode != 200 {
+		log.Fatal(stringifyResponseBody(resp))
+	}
 
 	reader := bufio.NewReader(resp.Body)
 out:
@@ -250,7 +126,7 @@ func (app *appEnv) singlePrompt() {
 	}
 	defer resp.Body.Close()
 
-	if app.outputJSON {
+	if app.OutputJSON {
 		printResponse(stringifyResponseBody(resp))
 		print()
 		return
@@ -290,29 +166,68 @@ func (app *appEnv) sessionPrompt() {
 	fmt.Println()
 }
 
-func (app *appEnv) run() {
+func Init() {
+	createConfig()
+	db.InitDB()
+	SelectAndSaveModel()
+	GetAndSaveToken()
+}
+
+func InitApp() appEnv {
+	app := appEnv{}
+	app.loadConfig()
+	return app
+}
+
+func (app *appEnv) Chat() {
+	app.loadConfig()
 	if app.personality != "" {
 		app.messages = append(app.messages, createMessage("system", app.personality))
 	}
-
-	if app.isSinglePrompt {
-		app.messages = append(app.messages, createMessage("user", app.initialPrompt))
-		app.singlePrompt()
-	} else {
-		if app.listSessions {
-			app.loadSession()
+	for true {
+		var input string
+		if app.InitialPrompt != "" {
+			input = app.InitialPrompt
+			app.InitialPrompt = ""
+		} else {
+			input = getUserInput()
 		}
+		app.messages = append(app.messages, createMessage("user", input))
+		app.sessionPrompt()
+	}
+}
 
-		for true {
-			var input string
-			if app.initialPrompt != "" {
-				input = app.initialPrompt
-				app.initialPrompt = ""
-			} else {
-				input = getUserInput()
-			}
-			app.messages = append(app.messages, createMessage("user", input))
-			app.sessionPrompt()
+func (app *appEnv) SinglePrompt() {
+	app.loadConfig()
+	app.isSinglePrompt = true
+	app.messages = append(app.messages, createMessage("user", app.InitialPrompt))
+	app.singlePrompt()
+}
+
+func (app *appEnv) ListAndSelectSession() {
+	app.loadConfig()
+	app.listSessions = true
+	app.sessions = db.GetLastTenSessions()
+
+	sessionNames := []string{}
+	for _, e := range app.sessions {
+		sessionNames = append(sessionNames, e.Messages[0].Content)
+	}
+
+	selectSessionPromptContent := promptSelectContent{
+		label:        "Select a previous chat",
+		selectValues: sessionNames,
+	}
+	promptResult := promptGetSelect(selectSessionPromptContent)
+
+	app.currentSession = app.sessions[promptResult.index]
+	app.messages = app.currentSession.Messages
+	for _, e := range app.currentSession.Messages {
+		if e.Role == "user" {
+			fmt.Println(e.Content)
+		} else {
+			printResponse(e.Content)
+			fmt.Println()
 		}
 	}
 }

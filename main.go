@@ -1,10 +1,11 @@
+/*
+Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+
+*/
 package main
 
-import (
-	"cligpt/cligpt"
-	"os"
-)
+import "cligpt/cmd"
 
 func main() {
-	cligpt.CLI(os.Args[1:])
+	cmd.Execute()
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,6 +15,11 @@ const (
 	folderName = ".cligpt"
 	configName = "config.yaml"
 )
+
+var models = map[string]string{
+	"chatgpt": "gpt-3.5-turbo",
+	"gpt4":    "gpt-4",
+}
 
 type Config struct {
 	Model       string  `yaml:"model"`
@@ -32,6 +38,11 @@ func getConfigPath() string {
 }
 
 func createConfig() {
+	if _, err := os.Stat(getConfigPath()); err == nil {
+		log.Default().Println("Config file found, skipping creation...")
+		return
+	}
+
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +66,7 @@ func createConfig() {
 	fmt.Println("Config file created at: ", f.Name())
 }
 
-func saveToConfig(key string, value string ) {
+func saveToConfig(key string, value string) {
 	path := getConfigPath()
 
 	config := parseConfig()
@@ -80,29 +91,14 @@ func saveToConfig(key string, value string ) {
 		log.Fatal(err2)
 	}
 
-	fmt.Println(key + " saved to config file at: ", path)
-}
-
-func saveConfig(newConfig Config) {
-	data, err := yaml.Marshal(&newConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	path := getConfigPath()
-
-	err2 := ioutil.WriteFile(path, data, 0)
-
-	if err2 != nil {
-		log.Fatal(err2)
-	}
+	fmt.Println(key+" saved to config file at: ", path)
 }
 
 func parseConfig() Config {
 	path := getConfigPath()
 
 	if _, err := os.Stat(path); err != nil {
-		createConfig()
+		log.Fatal("Config file not found, please run `cligpt init` first")
 	}
 
 	data, err := ioutil.ReadFile(path)
@@ -117,4 +113,26 @@ func parseConfig() Config {
 	}
 
 	return config
+}
+
+func SelectAndSaveModel() {
+	selectModelPromptContent := promptSelectContent{
+		label:        "Select a model",
+		selectValues: []string{"chatgpt", "gpt4"},
+	}
+	promptResult := promptGetSelect(selectModelPromptContent)
+	saveToConfig("model", models[promptResult.value])
+}
+
+func GetAndSaveToken() {
+	getTokenInputContent := promptInputContent{
+		errorMsg: "Please enter a valid token",
+		label:    "Enter your OpenAI token:",
+		isValidInputString: func(input string) bool {
+			return strings.HasPrefix(input, "sk-")
+		},
+	}
+
+	token := promptGetInput(getTokenInputContent)
+	saveToConfig("token", token)
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -20,10 +21,10 @@ type ResponseBody struct {
 }
 
 type RequestBody struct {
-	Model       string    `json:"model"`
+	Model       string          `json:"model"`
 	Messages    []types.Message `json:"messages"`
-	Stream      bool      `json:"stream"`
-	Temperature float64   `json:"temperature"`
+	Stream      bool            `json:"stream"`
+	Temperature float64         `json:"temperature"`
 }
 
 func buildRequest(app *appEnv) *http.Request {
@@ -55,13 +56,17 @@ func buildRequest(app *appEnv) *http.Request {
 }
 
 func parseResponse(resp *http.Response) ResponseBody {
+	if strings.HasPrefix(http.StatusText(resp.StatusCode), "4") || strings.HasPrefix(http.StatusText(resp.StatusCode), "5") {
+		log.Fatal(stringifyResponseBody(resp))
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal("Error reading response body:", err)
 	}
 
 	var responseBody ResponseBody
-	
+
 	if err := json.Unmarshal(body, &responseBody); err != nil {
 		log.Fatal("Error parsing response body:", err)
 	}

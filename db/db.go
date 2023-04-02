@@ -28,63 +28,14 @@ func getDbPath() string {
 }
 
 func getDb() *sql.DB {
-	var db *sql.DB
 	filePath := getDbPath()
 
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Default().Println("Database file not found, creating one...")
-		createDbFile()
-
-		db, err = sql.Open("sqlite3", filePath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else {
-		db, err = sql.Open("sqlite3", filePath)
-		if err != nil {
-			log.Fatal(err)
-		}
+	db, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return db
-}
-
-func createDbFile() {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pathToFolder := filepath.Join(homedir, folderName)
-
-	if _, err := os.Stat(pathToFolder); os.IsNotExist(err) {
-		err := os.Mkdir(pathToFolder, 0775)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	f, err := os.Create(getDbPath())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	db, err := sql.Open("sqlite3", getDbPath())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	log.Default().Println("Creating database table...")
-	createQuery := "CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY, messages JSON, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
-	_, err = db.Exec(createQuery)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Database file created at: ", f.Name())
 }
 
 func GetLastTenSessions() []types.Session {
@@ -109,7 +60,7 @@ func GetLastTenSessions() []types.Session {
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		var messagesArray []types.Message
 		err = json.Unmarshal([]byte(messages), &messagesArray)
 		if err != nil {
@@ -168,4 +119,46 @@ func UpdateSession(id int, messages []types.Message) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func InitDB() {
+	_, err := os.Stat(getDbPath())
+	if err == nil {
+		log.Default().Println("Database file found, skipping creation...")
+		return
+	}
+
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pathToFolder := filepath.Join(homedir, folderName)
+
+	if _, err := os.Stat(pathToFolder); os.IsNotExist(err) {
+		err := os.Mkdir(pathToFolder, 0775)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	f, err := os.Create(getDbPath())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	db, err := sql.Open("sqlite3", getDbPath())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	createQuery := "CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY, messages JSON, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+	_, err = db.Exec(createQuery)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Database file created at: ", f.Name())
 }
