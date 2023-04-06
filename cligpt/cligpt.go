@@ -211,7 +211,19 @@ func (app *appEnv) ListAndSelectSession() {
 
 	sessionNames := []string{}
 	for _, e := range app.sessions {
-		sessionNames = append(sessionNames, e.Messages[0].Content)
+		var name string
+		
+		if e.Messages[0].Role == "system" {
+			name = e.Messages[1].Content
+		} else {
+			name = e.Messages[0].Content
+		}
+
+		if len(name) > 90 {
+			name = strings.TrimSpace(name[:90]) + "..."
+		}
+
+		sessionNames = append(sessionNames, name)
 	}
 
 	selectSessionPromptContent := promptSelectContent{
