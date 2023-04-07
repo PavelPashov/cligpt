@@ -2,6 +2,16 @@
 
 CLIGPT is a command-line interface (CLI) application for interacting with OpenAI's ChatGPT. The application allows users to start a chat with the model, change the model configuration, prompt the model with a single prompt, and update the token.
 
+## Demo
+
+### Chat
+
+![](https://github.com/EiTamOnya/cligpt/examples/chat.gif)
+
+### List previous chat sessions
+
+![](https://github.com/EiTamOnya/cligpt/examples/list.gif)
+
 ## Building the App
 
 To install CLIGPT, follow these steps:
