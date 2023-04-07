@@ -6,11 +6,11 @@ CLIGPT is a command-line interface (CLI) application for interacting with OpenAI
 
 ### Chat
 
-![](https://github.com/EiTamOnya/cligpt/examples/chat.gif)
+![](https://github.com/EiTamOnya/cligpt/blob/master/examples/chat.gif)
 
 ### List previous chat sessions
 
-![](https://github.com/EiTamOnya/cligpt/examples/list.gif)
+![](https://github.com/EiTamOnya/cligpt/blob/master/examples/chat.gif)
 
 ## Building the App
 
