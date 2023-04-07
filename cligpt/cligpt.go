@@ -36,6 +36,7 @@ type appEnv struct {
 	isSinglePrompt bool
 	InitialPrompt  string
 	temperature    float64
+	max_tokens     int
 	personality    string
 	listSessions   bool
 	sessions       []types.Session
@@ -53,8 +54,16 @@ func (app *appEnv) loadConfig() {
 		app.model = config.Model
 	}
 
-	app.personality = config.Personality
+	var personality string
+	for _, p := range config.Personalities {
+		if p.Active {
+			personality = p.Context
+		}
+	}
+
+	app.personality = personality
 	app.temperature = config.Temperature
+	app.max_tokens = config.MaxTokens
 }
 
 func getUserInput() string {
@@ -212,7 +221,7 @@ func (app *appEnv) ListAndSelectSession() {
 	sessionNames := []string{}
 	for _, e := range app.sessions {
 		var name string
-		
+
 		if e.Messages[0].Role == "system" {
 			name = e.Messages[1].Content
 		} else {
