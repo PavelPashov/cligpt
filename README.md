@@ -61,6 +61,9 @@ To use CLIGPT, run the following commands:
 - `cligpt model`: Change the model configuration.
 - `cligpt prompt`: Prompt the model with a single prompt.
 - `cligpt token`: Update the token.
+- `cligpt persona`: Select a personality for the model.
+- `cligpt maxt`: Set the number of max tokens.
+- `cligpt temp`: Set the temperature.
 
 ## Contributing
 
