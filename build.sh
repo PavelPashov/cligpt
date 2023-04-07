@@ -11,7 +11,7 @@ package_name=${package_split[-1]}
 rm -rf ./dist
 mkdir -p ./dist
 
-platforms=("windows/amd64" "linux/amd64" "darwin/amd64")
+platforms=("windows/amd64" "windows/386" "linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64")
 
 for platform in "${platforms[@]}"; do
   platform_split=(${platform//\// })
