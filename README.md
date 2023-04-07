@@ -1,10 +1,10 @@
-# CLI-GPT
+# CLIGPT
 
-CLI-GPT is a command-line interface (CLI) application for interacting with OpenAI's ChatGPT. The application allows users to start a chat with the model, change the model configuration, prompt the model with a single prompt, and update the token.
+CLIGPT is a command-line interface (CLI) application for interacting with OpenAI's ChatGPT. The application allows users to start a chat with the model, change the model configuration, prompt the model with a single prompt, and update the token.
 
 ## Building the App
 
-To install CLI-GPT, follow these steps:
+To install CLIGPT, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/EiTamOnya/cligpt.git`
 2. Navigate to the project directory: `cd cligpt`
@@ -22,7 +22,7 @@ This will build the application for Windows, Linux, and macOS on 64-bit architec
 
 ### Linux
 
-To install CLI-GPT on Linux, build or download `cligpt-linux-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
+To install CLIGPT on Linux, build or download `cligpt-linux-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
 
 Then, run the following command:
 
@@ -34,7 +34,7 @@ Replace `<file>` with the name of the downloaded file.
 
 ### macOS
 
-To install CLI-GPT on macOS, build or download `cligpt-darwin-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
+To install CLIGPT on macOS, build or download `cligpt-darwin-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
 
 Then, run the following command:
 
@@ -46,7 +46,7 @@ Replace `<file>` with the name of the downloaded file.
 
 ## Configuration
 
-Before using CLI-GPT, you will need to create an OpenAI API key. To do this, follow these steps:
+Before using CLIGPT, you will need to create an OpenAI API key. To do this, follow these steps:
 
 1. Sign up for an OpenAI API key [here](https://beta.openai.com/signup/).
 2. Create a new API key (you might need to add a payment method if you're not eligible for a free trial).
@@ -54,17 +54,17 @@ Before using CLI-GPT, you will need to create an OpenAI API key. To do this, fol
 
 ## Available Commands
 
-To use CLI-GPT, run the following commands:
+To use CLIGPT, run the following commands:
 
 - `cligpt chat`: Start a chat with the model.
-- `cligpt init`: Initiate the setup for CLI-GPT.
+- `cligpt init`: Initiate the setup for CLIGPT.
 - `cligpt model`: Change the model configuration.
 - `cligpt prompt`: Prompt the model with a single prompt.
 - `cligpt token`: Update the token.
 
 ## Contributing
 
-If you would like to contribute to CLI-GPT, please follow these steps:
+If you would like to contribute to CLIGPT, please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch: `git checkout -b my-feature-branch`
