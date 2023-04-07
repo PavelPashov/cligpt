@@ -48,8 +48,6 @@ func GetLastTenSessions() []types.Session {
 	}
 	defer rows.Close()
 
-	println(rows)
-
 	var sessions []types.Session
 	for rows.Next() {
 		var id int
