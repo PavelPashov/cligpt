@@ -18,7 +18,7 @@ To install cligpt, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/EiTamOnya/cligpt.git`
 2. Navigate to the project directory: `cd cligpt`
-3. Run the build script: `./build cligpt`
+3. Run the build script: `./build github.com/eitamonya/cligpt`
 
 The build script supports different architectures and platforms. You can modify the `platforms` array in the `build.sh` file to include the architectures you want to build for. For example, the default `platforms` array includes the following architectures:
 
@@ -29,6 +29,12 @@ platforms=("windows/amd64" "linux/amd64" "darwin/amd64")
 This will build the application for Windows, Linux, and macOS on 64-bit architectures.
 
 ## Installation
+
+### With Golang
+
+```
+go install github.com/eitamonya/cligpt@latest
+```
 
 ### Linux
 
