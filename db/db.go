@@ -11,7 +11,7 @@ import (
 
 	"github.com/eitamonya/cligpt/types"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 const (
@@ -31,7 +31,7 @@ func getDbPath() string {
 func getDb() *sql.DB {
 	filePath := getDbPath()
 
-	db, err := sql.Open("sqlite3", filePath)
+	db, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func InitDB() {
 	}
 	defer f.Close()
 
-	db, err := sql.Open("sqlite3", getDbPath())
+	db, err := sql.Open("sqlite", getDbPath())
 	if err != nil {
 		log.Fatal(err)
 	}
