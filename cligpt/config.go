@@ -75,7 +75,7 @@ func createConfig() {
 	// Set default values
 	config := Config{
 		Model:         "",
-		Personalities: []Personality{},
+		Personalities: getDefaultPersonalities(),
 		Temperature:   1.0,
 		MaxTokens:     0,
 	}
@@ -151,6 +151,20 @@ func parseConfig() Config {
 	return config
 }
 
+func getDefaultPersonalities() []Personality {
+	devName := "dev"
+	devContext := "You are a helpful assistnat and a very experienced developer, you answer in concise manner with code snippets."
+	writerName := "writer"
+	writerContext := "You are a writer, you answer in a exaggerated manner, you are very creative and you love to write."
+
+	var personalities []Personality
+
+	personalities = append(personalities, Personality{Name: devName, Context: devContext, Active: true})
+	personalities = append(personalities, Personality{Name: writerName, Context: writerContext, Active: false})
+
+	return personalities
+}
+
 func SelectAndSaveModel() {
 	selectModelPromptContent := promptSelectContent{
 		label:        "Select a model",
@@ -196,7 +210,11 @@ func AddPersonality() {
 
 	config := parseConfig()
 
-	config.Personalities = append(config.Personalities, Personality{Name: name, Context: context})
+	for persona := range config.Personalities {
+		config.Personalities[persona].Active = false // Deactivate all old personalities
+	}
+
+	config.Personalities = append(config.Personalities, Personality{Name: name, Context: context, Active: true})
 
 	data, err := yaml.Marshal(&config)
 	if err != nil {
