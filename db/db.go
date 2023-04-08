@@ -1,7 +1,6 @@
 package db
 
 import (
-	"cligpt/types"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -9,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/eitamonya/cligpt/types"
 
 	_ "github.com/mattn/go-sqlite3"
 )

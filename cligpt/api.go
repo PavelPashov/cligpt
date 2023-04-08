@@ -2,12 +2,13 @@ package cligpt
 
 import (
 	"bytes"
-	"cligpt/types"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/eitamonya/cligpt/types"
 )
 
 const (

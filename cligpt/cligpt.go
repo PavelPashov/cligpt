@@ -11,8 +11,9 @@ import (
 	"regexp"
 	"strings"
 
-	"cligpt/db"
-	"cligpt/types"
+	"github.com/eitamonya/cligpt/types"
+
+	"github.com/eitamonya/cligpt/db"
 )
 
 const clearScreen string = "\033[H\033[2J"
