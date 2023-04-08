@@ -5,7 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"cligpt/cligpt"
+	"github.com/eitamonya/cligpt/cligpt"
 
 	"github.com/spf13/cobra"
 )

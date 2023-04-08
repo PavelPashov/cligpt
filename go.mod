@@ -1,4 +1,4 @@
-module cligpt
+module github.com/eitamonya/cligpt
 
 go 1.20
 
