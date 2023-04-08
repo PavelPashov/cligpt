@@ -71,6 +71,26 @@ func createConfig() {
 	}
 
 	defer f.Close()
+
+	// Set default values
+	config := Config{
+		Model:         "",
+		Personalities: []Personality{},
+		Temperature:   1.0,
+		MaxTokens:     0,
+	}
+
+	data, err := yaml.Marshal(&config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err2 := ioutil.WriteFile(f.Name(), data, 0)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
 	fmt.Println("Config file created at: ", f.Name())
 }
 

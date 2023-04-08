@@ -243,15 +243,13 @@ func (app *appEnv) ListAndSelectSession() {
 	promptResult := promptGetSelect(selectSessionPromptContent)
 
 	app.currentSession = app.sessions[promptResult.index]
+	app.sessions = nil
 	app.messages = app.currentSession.Messages
 	for _, e := range app.currentSession.Messages {
 		if e.Role == "user" {
-			fmt.Println()
-			fmt.Println("USER: ", e.Content)
-			fmt.Println()
+			fmt.Println("\nUSER: ", e.Content+"\n")
 		} else {
-			printResponse(e.Content)
-			fmt.Println()
+			printResponse(e.Content + "\n")
 		}
 	}
 }

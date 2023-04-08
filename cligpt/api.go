@@ -26,7 +26,7 @@ type RequestBody struct {
 	Messages    []types.Message `json:"messages"`
 	Stream      bool            `json:"stream"`
 	Temperature float64         `json:"temperature"`
-	MaxTokens   int             `json:"max_tokens"`
+	MaxTokens   int             `json:"max_tokens,omitempty"`
 }
 
 func buildRequest(app *appEnv) *http.Request {
@@ -34,15 +34,8 @@ func buildRequest(app *appEnv) *http.Request {
 
 	reqBody.Model = app.model
 	reqBody.Stream = !app.isSinglePrompt
-
-	if app.temperature != 0 {
-		reqBody.Temperature = app.temperature
-	}
-
-	if app.max_tokens != 0 {
-		reqBody.MaxTokens = app.max_tokens
-	}
-
+	reqBody.Temperature = app.temperature
+	reqBody.MaxTokens = app.max_tokens
 	reqBody.Messages = app.messages
 
 	finalReqBody, err := json.Marshal(reqBody)
