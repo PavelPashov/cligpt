@@ -19,10 +19,16 @@ jobs:
       - name: Build files
         run: ./build.sh github.com/eitamonya/cligpt
 
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ github.run_id }}"
-          title: "Build"
+          automatic_release_tag: ${{ steps.tag_version.outputs.new_tag }}
+          title: Release ${{ steps.tag_version.outputs.new_tag }}
           files: ./dist/*
