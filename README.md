@@ -12,25 +12,17 @@ Cligpt is a command-line interface (CLI) application for interacting with OpenAI
 
 ![](https://github.com/EiTamOnya/cligpt/blob/master/examples/list.gif)
 
-## Building the App
+## Prerequisites
 
-To install cligpt, follow these steps:
-
-1. Clone the repository: `git clone https://github.com/EiTamOnya/cligpt.git`
-2. Navigate to the project directory: `cd cligpt`
-3. Run the build script: `./build github.com/eitamonya/cligpt`
-
-The build script supports different architectures and platforms. You can modify the `platforms` array in the `build.sh` file to include the architectures you want to build for. For example, the default `platforms` array includes the following architectures:
-
-```
-platforms=("windows/amd64" "linux/amd64" "darwin/amd64")
-```
-
-This will build the application for Windows, Linux, and macOS on 64-bit architectures.
+An `OpenAI` [API Key](https://platform.openai.com/account/api-keys) is required.
 
 ## Installation
 
 ### With Golang
+
+Make sure you have `golang` 1.20.x installed.
+
+Then, run the following command:
 
 ```
 go install github.com/eitamonya/cligpt@latest
@@ -60,13 +52,29 @@ sudo cp <file> /usr/local/bin/cligpt
 
 Replace `<file>` with the name of the downloaded file.
 
-## Configuration
+## Setup
 
-Before using cligpt, you will need to create an OpenAI API key. To do this, follow these steps:
+Before using cligpt, you will need to create an `OpenAI` API key. To do this, follow these steps:
 
-1. Sign up for an OpenAI API key [here](https://beta.openai.com/signup/).
+1. Sign up for an `OpenAI` API key [here](https://beta.openai.com/signup/).
 2. Create a new API key (you might need to add a payment method if you're not eligible for a free trial).
 3. Run `cligpt init` and add the key once prompted.
+
+## Building the App
+
+To build cligpt, follow these steps:
+
+1. Clone the repository: `git clone https://github.com/EiTamOnya/cligpt.git`
+2. Navigate to the project directory: `cd cligpt`
+3. Run the build script: `./build github.com/eitamonya/cligpt`
+
+The build script supports different architectures and platforms. You can modify the `platforms` array in the `build.sh` file to include the architectures you want to build for. For example, the default `platforms` array includes the following architectures:
+
+```
+platforms=("windows/amd64" "linux/amd64" "darwin/amd64")
+```
+
+This will build the application for Windows, Linux, and macOS on 64-bit architectures.
 
 ## Available Commands
 
