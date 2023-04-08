@@ -126,7 +126,7 @@ out:
 
 func (app *appEnv) singlePrompt() {
 	fmt.Print(clearScreen)
-	req := buildRequest(app)
+	req := buildCompletionRequest(app)
 
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -141,7 +141,7 @@ func (app *appEnv) singlePrompt() {
 		return
 	}
 
-	responseBody := parseResponse(resp)
+	responseBody := parseCompletionResponse(resp)
 
 	printResponse(responseBody.Choices[0].Message.Content)
 	print()
@@ -150,7 +150,7 @@ func (app *appEnv) singlePrompt() {
 func (app *appEnv) sessionPrompt() {
 	fmt.Print(clearScreen)
 
-	req := buildRequest(app)
+	req := buildCompletionRequest(app)
 
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -162,6 +162,8 @@ func (app *appEnv) sessionPrompt() {
 	content := parseMessageChunks(resp)
 
 	// app.messages = append(app.messages, types.Message{Role: "assistant", Content: content})
+	// newMessages := append(app.currentSession.Messages, types.Message{Role: "assistant", Content: content})
+
 	app.currentSession.Messages = append(app.currentSession.Messages, types.Message{Role: "assistant", Content: content})
 
 	if app.currentSession.ID == 0 {
@@ -170,9 +172,6 @@ func (app *appEnv) sessionPrompt() {
 		db.UpdateSession(app.currentSession.ID, app.currentSession.Messages)
 	}
 
-	if app.currentSession.ID != 0 {
-	} else {
-	}
 	fmt.Println()
 }
 
@@ -191,12 +190,15 @@ func InitApp() appEnv {
 
 func (app *appEnv) Chat() {
 	app.loadConfig()
-	if app.personality != "" {
-		if app.currentSession.ID == 0 {
-			app.currentSession = types.Session{Messages: []types.Message{}}
-			app.currentSession.Messages = append(app.currentSession.Messages, createMessage("system", app.personality))
-		}
+
+	if app.currentSession.ID == 0 {
+		app.currentSession = types.Session{Messages: []types.Message{}}
 	}
+
+	if app.personality != "" && app.currentSession.ID == 0 {
+		app.currentSession.Messages = append(app.currentSession.Messages, createMessage("system", app.personality))
+	}
+
 	for true {
 		var input string
 		if app.InitialPrompt != "" {
@@ -205,6 +207,11 @@ func (app *appEnv) Chat() {
 		} else {
 			input = getUserInput()
 		}
+
+		if input == "exit" || input == "quit" || input == "q" {
+			break
+		}
+
 		app.currentSession.Messages = append(app.currentSession.Messages, createMessage("user", input))
 		app.sessionPrompt()
 	}
@@ -257,4 +264,19 @@ func (app *appEnv) ListAndSelectSession() {
 			printResponse(e.Content + "\n")
 		}
 	}
+}
+
+func (app *appEnv) GenerateImage() {
+	fmt.Print(clearScreen)
+	req := buildImageRequest(app)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Error sending request:", err)
+	}
+	defer resp.Body.Close()
+
+	printResponse(stringifyResponseBody(resp))
+	print()
 }

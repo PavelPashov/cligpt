@@ -101,7 +101,7 @@ func CreateSession(messages []types.Message) types.Session {
 
 	return types.Session{
 		ID:       int(result),
-		Messages: []types.Message{},
+		Messages: messages,
 	}
 }
 
