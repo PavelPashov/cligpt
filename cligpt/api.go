@@ -36,7 +36,7 @@ func buildRequest(app *appEnv) *http.Request {
 	reqBody.Stream = !app.isSinglePrompt
 	reqBody.Temperature = app.temperature
 	reqBody.MaxTokens = app.max_tokens
-	reqBody.Messages = app.messages
+	reqBody.Messages = app.currentSession.Messages
 
 	finalReqBody, err := json.Marshal(reqBody)
 	if err != nil {

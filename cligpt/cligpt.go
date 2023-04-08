@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -30,7 +29,7 @@ type Chunk struct {
 }
 
 type appEnv struct {
-	messages       []types.Message
+	// messages       []types.Message
 	model          string
 	token          string
 	OutputJSON     bool
@@ -162,12 +161,13 @@ func (app *appEnv) sessionPrompt() {
 
 	content := parseMessageChunks(resp)
 
-	app.messages = append(app.messages, types.Message{Role: "assistant", Content: content})
+	// app.messages = append(app.messages, types.Message{Role: "assistant", Content: content})
+	app.currentSession.Messages = append(app.currentSession.Messages, types.Message{Role: "assistant", Content: content})
 
-	if reflect.ValueOf(app.currentSession).IsZero() {
-		app.currentSession = db.CreateSession(app.messages)
+	if app.currentSession.ID == 0 {
+		app.currentSession = db.CreateSession(app.currentSession.Messages)
 	} else {
-		db.UpdateSession(app.currentSession.ID, app.messages)
+		db.UpdateSession(app.currentSession.ID, app.currentSession.Messages)
 	}
 
 	if app.currentSession.ID != 0 {
@@ -192,7 +192,10 @@ func InitApp() appEnv {
 func (app *appEnv) Chat() {
 	app.loadConfig()
 	if app.personality != "" {
-		app.messages = append(app.messages, createMessage("system", app.personality))
+		if app.currentSession.ID == 0 {
+			app.currentSession = types.Session{Messages: []types.Message{}}
+			app.currentSession.Messages = append(app.currentSession.Messages, createMessage("system", app.personality))
+		}
 	}
 	for true {
 		var input string
@@ -202,7 +205,7 @@ func (app *appEnv) Chat() {
 		} else {
 			input = getUserInput()
 		}
-		app.messages = append(app.messages, createMessage("user", input))
+		app.currentSession.Messages = append(app.currentSession.Messages, createMessage("user", input))
 		app.sessionPrompt()
 	}
 }
@@ -210,7 +213,8 @@ func (app *appEnv) Chat() {
 func (app *appEnv) SinglePrompt() {
 	app.loadConfig()
 	app.isSinglePrompt = true
-	app.messages = append(app.messages, createMessage("user", app.InitialPrompt))
+	app.currentSession = types.Session{Messages: []types.Message{}}
+	app.currentSession.Messages = append(app.currentSession.Messages, createMessage("user", app.InitialPrompt))
 	app.singlePrompt()
 }
 
@@ -244,10 +248,11 @@ func (app *appEnv) ListAndSelectSession() {
 
 	app.currentSession = app.sessions[promptResult.index]
 	app.sessions = nil
-	app.messages = app.currentSession.Messages
 	for _, e := range app.currentSession.Messages {
 		if e.Role == "user" {
-			fmt.Println("\nUSER: ", e.Content+"\n")
+			fmt.Println("USER: ", e.Content+"\n")
+		} else if e.Role == "system" {
+			fmt.Println("SYSTEM: ", e.Content+"\n")
 		} else {
 			printResponse(e.Content + "\n")
 		}
