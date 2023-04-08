@@ -1,6 +1,6 @@
-# CLIGPT
+# cligpt
 
-CLIGPT is a command-line interface (CLI) application for interacting with OpenAI's ChatGPT. The application allows users to start a chat with the model, change the model configuration, prompt the model with a single prompt, and update the token.
+Cligpt is a command-line interface (CLI) application for interacting with OpenAI's ChatGPT. The application allows users to start a chat with the model, change the model configuration, save conversations and continue them.
 
 ## Demo
 
@@ -14,7 +14,7 @@ CLIGPT is a command-line interface (CLI) application for interacting with OpenAI
 
 ## Building the App
 
-To install CLIGPT, follow these steps:
+To install cligpt, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/EiTamOnya/cligpt.git`
 2. Navigate to the project directory: `cd cligpt`
@@ -32,7 +32,7 @@ This will build the application for Windows, Linux, and macOS on 64-bit architec
 
 ### Linux
 
-To install CLIGPT on Linux, build or download `cligpt-linux-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
+To install cligpt on Linux, build or download `<file>` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
 
 Then, run the following command:
 
@@ -44,7 +44,7 @@ Replace `<file>` with the name of the downloaded file.
 
 ### macOS
 
-To install CLIGPT on macOS, build or download `cligpt-darwin-amd64` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
+To install cligpt on macOS, build or download `<file>` from [here](https://github.com/EiTamOnya/cligpt/releases/latest).
 
 Then, run the following command:
 
@@ -56,28 +56,30 @@ Replace `<file>` with the name of the downloaded file.
 
 ## Configuration
 
-Before using CLIGPT, you will need to create an OpenAI API key. To do this, follow these steps:
+Before using cligpt, you will need to create an OpenAI API key. To do this, follow these steps:
 
 1. Sign up for an OpenAI API key [here](https://beta.openai.com/signup/).
 2. Create a new API key (you might need to add a payment method if you're not eligible for a free trial).
-3. Run `cligpt init` and copy the key once prompted.
+3. Run `cligpt init` and add the key once prompted.
 
 ## Available Commands
 
-To use CLIGPT, run the following commands:
+These are the available commands for cligpt:
 
 - `cligpt chat`: Start a chat with the model.
-- `cligpt init`: Initiate the setup for CLIGPT.
-- `cligpt model`: Change the model configuration.
+- `cligpt init`: Initiate the setup for cligpt.
+- `cligpt model`: Select a model which will be saved to your config.
 - `cligpt prompt`: Prompt the model with a single prompt.
-- `cligpt token`: Update the token.
-- `cligpt persona`: Select a personality for the model.
-- `cligpt maxt`: Set the number of max tokens.
-- `cligpt temp`: Set the temperature.
+- `cligpt token`: Update the your OpenAI API key.
+- `cligpt persona`: Select a personality for the model. This is used in the first system message if provided.
+- `cligpt maxt`: Set the number of max tokens to generate in the chat completion.
+- `cligpt temp`: Set the sampling temperature.
+
+Use `--help` or `-h` after any command to see the available subcommands and prompts.
 
 ## Contributing
 
-If you would like to contribute to CLIGPT, please follow these steps:
+If you would like to contribute to cligpt, please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch: `git checkout -b my-feature-branch`
