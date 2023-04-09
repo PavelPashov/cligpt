@@ -29,7 +29,6 @@ type Chunk struct {
 }
 
 type appEnv struct {
-	// messages       []types.Message
 	model          string
 	token          string
 	OutputJSON     bool
@@ -160,9 +159,6 @@ func (app *appEnv) sessionPrompt() {
 	defer resp.Body.Close()
 
 	content := parseMessageChunks(resp)
-
-	// app.messages = append(app.messages, types.Message{Role: "assistant", Content: content})
-	// newMessages := append(app.currentSession.Messages, types.Message{Role: "assistant", Content: content})
 
 	app.currentSession.Messages = append(app.currentSession.Messages, types.Message{Role: "assistant", Content: content})
 
