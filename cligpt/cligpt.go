@@ -40,6 +40,7 @@ type appEnv struct {
 	listSessions   bool
 	sessions       []types.Session
 	currentSession types.Session
+	image          Image
 }
 
 func (app *appEnv) loadConfig() {
@@ -51,6 +52,10 @@ func (app *appEnv) loadConfig() {
 		app.model = models["chatgpt"]
 	} else {
 		app.model = config.Model
+	}
+
+	if config.Image != (Image{}) {
+		app.image = config.Image
 	}
 
 	var personality string

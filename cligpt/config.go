@@ -28,12 +28,20 @@ type Personality struct {
 	Context string `yaml:"context"`
 }
 
+type Image struct {
+	Model   string `yaml:"model"`
+	Size    string `yaml:"size"`
+	Quality string `yaml:"quality"`
+	Style   string `yaml:"style"`
+}
+
 type Config struct {
 	Model         string        `yaml:"model"`
 	Token         string        `yaml:"token"`
 	Personalities []Personality `yaml:"personalities"`
 	Temperature   float64       `yaml:"temperature"`
 	MaxTokens     int           `yaml:"max_tokens"`
+	Image         Image         `yaml:"image"`
 }
 
 func getConfigPath() string {
