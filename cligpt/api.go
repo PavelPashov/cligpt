@@ -37,9 +37,12 @@ type ImageResponseBody struct {
 }
 
 type ImageRequestBody struct {
-	Prompt string `json:"prompt"`
-	N      int    `json:"n"`
-	Size   string `json:"size"`
+	Prompt  string `json:"prompt"`
+	N       int    `json:"n"`
+	Size    string `json:"size"`
+	Model   string `json:"model"`
+	Quality string `json:"quality"`
+	Style   string `json:"style"`
 }
 
 func buildCompletionRequest(app *appEnv) *http.Request {
@@ -91,7 +94,18 @@ func buildImageRequest(app *appEnv) *http.Request {
 
 	reqBody.Prompt = app.InitialPrompt
 	reqBody.N = 1
-	reqBody.Size = "1024x1024"
+
+	if app.image == (Image{}) {
+		reqBody.Size = "1024x1024"
+		reqBody.Model = "dall-e-3"
+		reqBody.Quality = "standard"
+		reqBody.Style = "vivid"
+	} else {
+		reqBody.Size = app.image.Size
+		reqBody.Model = app.image.Model
+		reqBody.Quality = app.image.Quality
+		reqBody.Style = app.image.Style
+	}
 
 	finalReqBody, err := json.Marshal(reqBody)
 	if err != nil {
